@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional, Union, List, Dict
 
 from dash_iconify import DashIconify
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ class FormSection(BaseModel):
 
     name: str
     fields: list[str]
-    icon: str | DashIconify | None = None
+    icon: Optional[Union[str, DashIconify]] = None
     default_open: bool = False
 
     model_config = {"arbitrary_types_allowed": True}
@@ -54,8 +54,8 @@ class Sections(BaseModel):
     sections: list[FormSection]
     remaining_fields_position: Position = "top"
     render: SectionRender = "accordion"
-    excluded_fields: list[str] | None = None
-    render_kwargs: dict | None = None
+    excluded_fields: Optional[List[str]] = None
+    render_kwargs: Optional[Dict] = None
 
     def model_post_init(self, _context):
         """Model post init."""

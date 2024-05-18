@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from functools import partial
-from typing import Literal
+from typing import Literal, Dict, Optional, Union
 
 import dash_mantine_components as dmc
 from dash import (
@@ -49,11 +49,11 @@ class ModelListField(BaseField):
     render_type: Literal["accordion", "modal", "list"] = Field(
         default="accordion", description="How to render the list of items, one  of 'accordion', 'modal', 'list'."
     )
-    fields_repr: dict[str, dict | BaseField] | None = Field(
+    fields_repr: Optional[Dict[str, Union[dict, BaseField]]] = Field(
         default=None,
         description="Fields representation, mapping between field name and field representation for the nested fields.",
     )
-    sections: Sections | None = Field(default=None, description="Sub-form sections.")
+    sections: Optional[Sections] = Field(default=None, description="Sub-form sections.")
     items_deletable: bool = Field(default=True, description="Whether the items can be deleted.")
     items_creatable: bool = Field(default=True, description="Whether new items can be created.")
 
@@ -89,8 +89,8 @@ class ModelListField(BaseField):
         parent: str,
         index: int,
         value: BaseModel,
-        fields_repr: dict[str, dict | BaseField] | None = None,
-        sections: Sections | None = None,
+        fields_repr: Optional[Dict[str, Union[dict, BaseField]]] = None,
+        sections: Optional[Sections] = None,
         items_deletable: bool = True,
         **_kwargs,
     ):
@@ -140,8 +140,8 @@ class ModelListField(BaseField):
         field: str,
         parent: str,
         index: int,
-        fields_repr: dict[str, dict | BaseField] | None = None,
-        sections: Sections | None = None,
+        fields_repr: Optional[Dict[str, Union[dict, BaseField]]] = None,
+        sections: Optional[Sections] = None,
         items_deletable: bool = True,
         **_kwargs,
     ):
@@ -187,8 +187,8 @@ class ModelListField(BaseField):
         index: int,
         value: BaseModel,
         opened: bool = False,
-        fields_repr: dict[str, dict | BaseField] | None = None,
-        sections: Sections | None = None,
+        fields_repr: Optional[Dict[str, Union[dict, BaseField]]] = None,
+        sections: Optional[Sections] = None,
         items_deletable: bool = True,
         **_kwargs,
     ):

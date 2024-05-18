@@ -6,6 +6,7 @@ from dash_pydantic_form.fields import fields
 from dash_pydantic_form.form_section import FormSection, Sections
 from dash_pydantic_form.model_form import ModelForm
 
+# Add utility methods to BaseModel
 BaseModel.__getitem__ = lambda self, key: self.__dict__.get(key)
 BaseModel.to_plotly_json = lambda self: self.model_dump(mode="json")
 

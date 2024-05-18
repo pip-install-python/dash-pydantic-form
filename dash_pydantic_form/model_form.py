@@ -2,7 +2,8 @@ import contextlib
 import itertools
 from copy import deepcopy
 from functools import partial
-from typing import Literal, Union
+from typing import Literal, Union, List, Type
+from typing_extensions import TypeAlias
 
 import dash_mantine_components as dmc
 from dash import (
@@ -36,15 +37,16 @@ from .utils import (
     handle_discriminated,
     model_construct_recursive,
 )
-
+# Typing alias to avoid conflicts
+TypeAlias = Type
 
 def form_base_id(part: str, aio_id: str, form_id: str, parent: str = ""):
     """Form parts id."""
     return {"part": part, "aio_id": aio_id, "form_id": form_id, "parent": parent}
 
 
-Children_ = Component | str | int | float
-Children = Children_ | list[Children_]
+Children_ = Union[Component, str, int, float]
+Children = Union[Children_, List[Children_]]
 SectionRender = Literal["accordion", "tabs", "steps"]
 Position = Literal["top", "bottom", "none"]
 
@@ -54,7 +56,7 @@ class ModelForm(html.Div):
 
     Parameters
     ----------
-    item: BaseModel | type[BaseModel]
+    item: Union[BaseModel, Type[BaseModel]]
         The model to create the form from, can be the model class or an instance of the class.
         If the class is passed, the form will be empty. If an instance is passed, the form will be pre-filled
         with existing values.
@@ -63,11 +65,11 @@ class ModelForm(html.Div):
     form_id: str
         Form ID, can be used to create multiple forms on the same page. When working with databases
         this could be the document / record ID.
-    fields_repr: dict[str, dict | BaseField] | None
+    fields_repr: Optional[Dict[str, Union[BaseField, dict]]]
         Mapping between field name and field representation. If not provided, default field
         representations will be used based on the field annotation.
         See :meth:`dash_pydantic_form.fields.get_default_repr`.
-    sections: Sections | None
+    sections: Optional[Sections]
         List of form sections (optional). See :class:`dash_pydantic_form.form_section.Sections`.
     """
 
@@ -87,13 +89,13 @@ class ModelForm(html.Div):
 
     def __init__(  # noqa: PLR0912, PLR0913, PLR0915
         self,
-        item: BaseModel | type[BaseModel],
+        item: Union[BaseModel, Type[BaseModel]],
         aio_id: str,
         form_id: str,
         path: str = "",
-        fields_repr: dict[str, Union["BaseField", dict]] | None = None,
-        sections: Sections | None = None,
-        discriminator: str | None = None,
+        fields_repr: Union[dict[str, Union["BaseField", dict]], None] = None,
+        sections: Union[Sections, None] = None,
+        discriminator: Union[str, None] = None
     ) -> None:
         from dash_pydantic_form.fields import get_default_repr
 

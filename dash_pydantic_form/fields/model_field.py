@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Literal
+from typing import Union, Dict, Optional, Literal
 
 import dash_mantine_components as dmc
 from dash import (
@@ -33,11 +33,11 @@ class ModelField(BaseField):
     render_type: Literal["accordion", "modal"] = Field(
         default="accordion", description="How to render the model field, one of 'accordion', 'modal'."
     )
-    fields_repr: dict[str, dict | BaseField] | None = Field(
+    fields_repr: Union[Dict[str, Union[Dict, BaseField]], None] = Field(
         default=None,
         description="Fields representation, mapping between field name and field representation for the nested fields.",
     )
-    sections: Sections | None = Field(default=None, description="Sub-form sections.")
+    sections: Union[Sections, None] = Field(default=None, description="Sub-form sections.")
 
     full_width = True
 
@@ -62,7 +62,7 @@ class ModelField(BaseField):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Union[FieldInfo, None] = None,
     ) -> Component:
         """Model field modal render."""
         from dash_pydantic_form import ModelForm
@@ -133,7 +133,7 @@ class ModelField(BaseField):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Union[FieldInfo, None] = None,
     ) -> Component:
         """Model field accordion item render."""
         from dash_pydantic_form import ModelForm
@@ -194,7 +194,7 @@ class ModelField(BaseField):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Union[FieldInfo, None] = None,
     ) -> Component:
         """Create a form field of type checklist to interact with the model field."""
         if self.render_type == "accordion":

@@ -2,7 +2,6 @@ from copy import deepcopy
 from datetime import date, time
 from enum import Enum
 from numbers import Number
-from types import UnionType
 from typing import Any, Literal, Union, get_args, get_origin
 
 from pydantic import BaseModel, create_model
@@ -22,20 +21,22 @@ class Type(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def classify(cls, annotation: type, discriminator: str | None = None, depth: int = 0) -> bool:  # noqa: PLR0911
+    def classify(cls, annotation: type, discriminator: Union[str, None] = None,
+                 depth: int = 0) -> bool:  # noqa: PLR0911
+
         """Classify a value as a field type."""
         annotation = get_non_null_annotation(annotation)
 
-        if is_subclass(annotation, str | Number | bool | date | time):
+        if is_subclass(annotation, Union[str, Number, bool, date, time]):
             return cls.SCALAR
 
         if is_subclass(annotation, BaseModel):
             return cls.MODEL
 
-        if get_origin(annotation) in [Union, UnionType]:
+        if get_origin(annotation) == Union:
             if discriminator and all(is_subclass(x, BaseModel) for x in get_args(annotation)):
                 return cls.DISCRIMINATED_MODEL
-            if all(is_subclass(x, str | Number) for x in get_args(annotation)):
+            if all(is_subclass(x, Union[str, Number]) for x in get_args(annotation)):
                 return cls.SCALAR
 
         if get_origin(annotation) == list and not depth:
@@ -62,7 +63,7 @@ def deep_merge(dict1: dict, dict2: dict) -> dict:
     return dict_final
 
 
-def deep_diff(dict1: dict, dict2: dict) -> dict[str, dict | tuple[Any, Any]]:
+def deep_diff(dict1: dict, dict2: dict) -> dict[str, Union[dict, tuple[Any, Any]]]:
     """Compute the deep difference between two dictionaries."""
     diff = {}
     for key in dict1.keys() | dict2.keys():
@@ -80,7 +81,7 @@ def get_non_null_annotation(annotation: type[Any]) -> type[Any]:
 
     e.g., get_non_null_annotation(Optional[str]) = str
     """
-    if get_origin(annotation) in [Union, UnionType]:
+    if get_origin(annotation) == Union:
         args = tuple(x for x in get_args(annotation) if x != type(None))
         if len(args) == 1:
             return args[0]

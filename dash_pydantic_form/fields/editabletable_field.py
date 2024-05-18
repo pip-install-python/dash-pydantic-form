@@ -13,6 +13,7 @@ from dash.development.base_component import Component
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
+from typing import get_args, Optional, Union, Dict, List, Any
 
 from dash_pydantic_form import ids as common_ids
 from dash_pydantic_form.fields.base_fields import (
@@ -32,14 +33,14 @@ from dash_pydantic_form.utils import get_fullpath, get_non_null_annotation
 class EditableTableField(BaseField):
     """Editable table input field attributes and rendering."""
 
-    fields_repr: dict[str, dict | BaseField] | None = Field(
+    fields_repr: Optional[Dict[str, Union[Dict, BaseField]]] = Field(
         default=None,
         description="Fields representation, mapping between field name and field representation for the nested fields.",
     )
     with_upload: bool = Field(default=True, description="Whether to allow uploading a CSV file.")
     rows_editable: bool = Field(default=True, description="Whether to allow editing rows.")
     table_height: int = Field(default=300, description="Table rows height in pixels.")
-    column_defs_overrides: dict[str, dict] | None = Field(default=None, description="Ag-grid column_defs overrides.")
+    column_defs_overrides: Optional[Dict[str, Dict]] = Field(default=None, description="Ag-grid column_defs overrides.")
 
     full_width = True
 
@@ -67,7 +68,7 @@ class EditableTableField(BaseField):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Optional[FieldInfo] = None,
     ) -> Component:
         """Create a form field of type Editable Table input to interact with the model."""
         value = self.get_value(item, field, parent) or []
@@ -184,7 +185,7 @@ class EditableTableField(BaseField):
                 ),
             ]
 
-        def get_field_repr(field: str) -> BaseField | dict:
+        def get_field_repr(field: str) -> Union[BaseField, Dict]:
             from dash_pydantic_form.fields import get_default_repr
 
             if field in self.fields_repr:
@@ -274,13 +275,13 @@ class EditableTableField(BaseField):
         )
 
     def _generate_field_column(  # noqa: PLR0913
-        self,
-        *,
-        field_name: str,
-        field_repr: BaseField | dict,
-        field_info: FieldInfo,
-        required_field: bool,
-        editable: bool = True,
+            self,
+            *,
+            field_name: str,
+            field_repr: Optional[Union[BaseField, dict]] = None,
+            field_info: FieldInfo,
+            required_field: bool,
+            editable: bool = True,
     ):
         """Takes a field and generates the 'columnDefs' dictionary for said field based on its type."""
         from dash_pydantic_form.fields import get_default_repr
@@ -300,7 +301,8 @@ class EditableTableField(BaseField):
             else None,
         }
 
-        if description := field_repr.get_description(field_info):
+        description = field_repr.get_description(field_info)
+        if description:
             column_def.update({"headerTooltip": description})
 
         if field_info.default != PydanticUndefined:
@@ -309,7 +311,7 @@ class EditableTableField(BaseField):
             column_def["default_value"] = field_info.default_factory()
 
         # if select field, generate column of dropdowns
-        if isinstance(field_repr, SelectField | SegmentedControlField | RadioItemsField):
+        if isinstance(field_repr, (SelectField, SegmentedControlField, RadioItemsField)):
             data = (
                 field_repr.data_getter()
                 if field_repr.data_getter
@@ -317,12 +319,10 @@ class EditableTableField(BaseField):
             )
             options = [
                 {
-                    "value": x
-                    if isinstance(x, str | int | float)
-                    else (x["value"] if isinstance(x, dict) else x.value),
-                    "label": x
-                    if isinstance(x, str | int | float)
-                    else (x["label"] if isinstance(x, dict) else x.label),
+                    "value": x if isinstance(x, (str, int, float)) else (
+                        x["value"] if isinstance(x, dict) else x.value),
+                    "label": x if isinstance(x, (str, int, float)) else (
+                        x["label"] if isinstance(x, dict) else x.label),
                 }
                 for x in data
             ]
@@ -340,7 +340,7 @@ class EditableTableField(BaseField):
                 }
             )
 
-        if isinstance(field_info, TextareaField | MarkdownField):
+        if isinstance(field_info, (TextareaField, MarkdownField)):
             column_def.update(
                 {
                     "cellEditor": "agLargeTextCellEditor",
@@ -349,7 +349,7 @@ class EditableTableField(BaseField):
                 }
             )
 
-        if isinstance(field_info, TextField | TextareaField | MarkdownField):
+        if isinstance(field_info, (TextField, TextareaField, MarkdownField)):
             column_def.update({"dtype": "str"})
 
         if isinstance(field_info, CheckboxField):

@@ -1,7 +1,7 @@
 import json
 from datetime import date
 from enum import Enum
-from typing import Literal
+from typing import Literal, Optional, Union
 
 import dash_mantine_components as dmc
 from dash import MATCH, Dash, Input, Output, _dash_renderer, callback
@@ -44,7 +44,7 @@ class Metadata(BaseModel):
     """Metadata model."""
 
     languages: list[Literal["fr", "en", "sp", "cn"]] = Field(title="Languages spoken", default_factory=list)
-    siblings: int | None = Field(title="Siblings", default=None)
+    siblings: Optional[int] = Field(title="Siblings", default=None)
 
 
 class Pet(BaseModel):
@@ -52,7 +52,7 @@ class Pet(BaseModel):
 
     name: str = Field(title="Name", description="Name of the pet")
     species: Species = Field(title="Species", description="Species of the pet")
-    dob: date | None = Field(title="Date of birth", description="Date of birth of the pet", default=None)
+    dob: Optional[date] = Field(title="Date of birth", description="Date of birth of the pet", default=None)
     alive: bool = Field(title="Alive", description="Is the pet alive", default=True)
 
 
@@ -75,11 +75,11 @@ class Employee(BaseModel):
 
     name: str = Field(title="Name", description="Name of the employee")
     age: int = Field(title="Age", description="Age of the employee, starting from their birth")
-    mini_bio: str | None = Field(title="Mini bio", description="Short bio of the employee", default=None)
+    mini_bio: Optional[str] = Field(title="Mini bio", description="Short bio of the employee", default=None)
     joined: date = Field(title="Joined", description="Date when the employee joined the company")
     office: Office = Field(title="Office", description="Office of the employee")
-    metadata: Metadata | None = Field(title="Employee metadata", default=None)
-    location: HomeOffice | WorkOffice | None = Field(title="Work location", default=None, discriminator="type")
+    metadata: Optional[Metadata] = Field(title="Employee metadata", default=None)
+    location: Optional[Union[HomeOffice, WorkOffice]] = Field(title="Work location", default=None, discriminator="type")
     pets: list[Pet] = Field(title="Pets", description="Employee pets", default_factory=list)
 
 

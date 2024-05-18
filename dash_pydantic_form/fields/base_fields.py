@@ -5,8 +5,8 @@ from datetime import time
 from enum import Enum, EnumMeta
 from functools import partial
 from textwrap import TextWrapper
-from types import UnionType
-from typing import Any, ClassVar, Literal, Union, get_args, get_origin
+# from types import UnionType
+from typing import Any, ClassVar, Literal, Union, Optional, Callable, get_args, get_origin, List
 
 import dash_mantine_components as dmc
 from dash import ALL, MATCH, ClientsideFunction, Input, Output, State, clientside_callback, html
@@ -44,22 +44,22 @@ VisibilityFilter = tuple[str, FilterOperator, Any]
 class BaseField(BaseModel):
     """Base field representation class."""
 
-    base_component: ClassVar[type[Component] | None] = None
+    base_component: ClassVar[Optional[type[Component]]] = None
     reserved_attributes: ClassVar = ("value", "label", "description", "id", "required")
     full_width: ClassVar[bool] = False
 
-    title: str | None = Field(
+    title: Optional[str] = Field(
         default=None, description="Field label, overrides the title defined in the pydantic Field."
     )
-    description: str | None = Field(
+    description: Optional[str] = Field(
         default=None, description="Field helper text, overrides the description defined in the pydantic Field."
     )
-    required: bool | None = Field(
+    required: Optional[bool] = Field(
         default=None,
         description="Whether to display a required asterisk. If not provided, uses pydantic's field `is_required`.",
     )
-    n_cols: int | None = Field(default=None, description="Number of columns in the form, out of 4. Default 2.")
-    visible: bool | VisibilityFilter | list[VisibilityFilter] | None = Field(
+    n_cols: Optional[int] = Field(default=None, description="Number of columns in the form, out of 4. Default 2.")
+    visible: Optional[Union[bool, VisibilityFilter, list[VisibilityFilter]]] = Field(
         default=None,
         description=(
             "Define visibility conditions based on other form fields.\n"
@@ -79,11 +79,12 @@ class BaseField(BaseModel):
             ""
         ),
     )
-    input_kwargs: dict | None = Field(
+    input_kwargs: Optional[dict] = Field(
         default=None,
         description="Arguments to be passed to the underlying rendered component.",
     )
-    field_id_meta: str | None = Field(default=None, description="Optional str to be set in the field id's 'meta' key.")
+    field_id_meta: Optional[str] = Field(default=None,
+                                         description="Optional str to be set in the field id's 'meta' key.")
 
     @classmethod
     def __pydantic_init_subclass__(cls):
@@ -177,7 +178,7 @@ class BaseField(BaseModel):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Optional[FieldInfo] = None
     ) -> Component:
         """Create a form input to interact with the field."""
         if not self.base_component:
@@ -304,7 +305,7 @@ class BaseField(BaseModel):
 
         return inputs, title
 
-    def get_title(self, field_info: FieldInfo, field_name: str | None = None) -> str:
+    def get_title(self, field_info: FieldInfo, field_name: Optional[str] = None) -> str:
         """Get the input title."""
         return self.title or field_info.title or field_name.replace("_", " ").title()
 
@@ -452,10 +453,10 @@ class TimeField(BaseField):
 class SelectField(BaseField):
     """Select field."""
 
-    data_getter: Callable[[], list] | None = Field(
+    data_getter: Optional[Callable[[], list]] = Field(
         default=None, description="Function to retrieve a list of options. This function takes no argument."
     )
-    options_labels: dict | None = Field(
+    options_labels: Optional[dict] = Field(
         default=None, description="Mapper from option to label. Especially useful for Literals and Enums."
     )
 
@@ -500,20 +501,21 @@ class SelectField(BaseField):
     def _get_data_list(
         self,
         non_null_annotation: type,
-        item: BaseModel | None = None,
-        field: str | None = None,
-        parent: str | None = None,
+        item: Optional[BaseModel] = None,
+        field: Optional[str] = None,
+        parent: Optional[str] = None,
         **kwargs,
     ) -> list[dict]:
         """Get list of possible values from annotation."""
         data = self._get_data_list_recursive(non_null_annotation, item=item, field=field, parent=parent, **kwargs)
         return data
 
-    def _get_data_list_recursive(self, non_null_annotation: type, **_kwargs) -> list:
+
+    def _get_data_list_recursive(self, non_null_annotation: type, **_kwargs) -> List:
         """Get list of possible values from annotation recursively."""
         data = []
         # if the annotation is a union of types, recursively calls this function on each type.
-        if get_origin(non_null_annotation) in [Union, UnionType]:
+        if get_origin(non_null_annotation) == Union:
             data.extend(
                 sum(
                     [self._get_data_list_recursive(sub_annotation) for sub_annotation in get_args(non_null_annotation)],

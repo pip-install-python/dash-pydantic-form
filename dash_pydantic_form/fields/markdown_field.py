@@ -5,6 +5,7 @@ from dash import MATCH, ClientsideFunction, Input, Output, clientside_callback, 
 from dash.development.base_component import Component
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
+from typing import Optional
 
 from dash_pydantic_form import ids as common_ids
 from dash_pydantic_form.fields.base_fields import BaseField
@@ -28,7 +29,7 @@ class MarkdownField(BaseField):
         form_id: str,
         field: str,
         parent: str = "",
-        field_info: FieldInfo | None = None,
+        field_info: Optional[FieldInfo] = None,
     ) -> Component:
         """Render the markdown field."""
         value = self.get_value(item, field, parent)
